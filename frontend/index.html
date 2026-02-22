@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pro Trading Terminal</title>
+<script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div id="topbar">
+  <div class="logo">
+    <span class="logo-dot"></span>
+    PRO TERMINAL
+  </div>
+  <input type="text" id="sym-input" placeholder="Symbol (BTC-USD, AAPL, ^NSEI...)" value="BTC-USD">
+  <button id="scan-btn">Scan</button>
+  <div class="sep"></div>
+  <div id="tf-wrap"></div>
+  <div class="sep"></div>
+  <span class="status-dot live"></span>
+  <label id="status-lbl">—</label>
+</div>
+
+<!-- STRATEGY BAR -->
+<div id="strat-bar">
+  <span class="strat-lbl">Strategy:</span>
+  <div id="strat-buttons"></div>
+  <div class="strat-info"></div>
+</div>
+
+<!-- MAIN LAYOUT -->
+<div id="main">
+  <!-- WATCHLIST PANEL -->
+  <div id="wl-panel">
+    <div id="wl-hdr">
+      <span>WATCHLIST</span>
+      <button id="wl-add">+ Add</button>
+    </div>
+    <div id="wl-search-wrap">
+      <input type="text" id="wl-search" placeholder="Filter...">
+    </div>
+    <div id="wl-items"></div>
+  </div>
+
+  <!-- CHART AREA -->
+  <div id="chart-wrap">
+    <div id="chart-toolbar">
+      <span id="ct-sym">—</span>
+      <span id="ct-px">—</span>
+      <div class="ema-leg" style="margin-left: 30px;">
+        <div class="ema-li"><div class="ema-dot" style="background:#ff9800;width:16px;height:3px;"></div>EMA 9</div>
+        <div class="ema-li"><div class="ema-dot" style="background:#f44336;width:16px;height:3px;"></div>EMA 21</div>
+        <div class="ema-li"><div class="ema-dot" style="background:#9c27b0;width:16px;height:3px;"></div>EMA 200</div>
+      </div>
+      <span id="ct-sigs">300 signals</span>
+    </div>
+    <div id="chart"></div>
+    <div id="chart-load">
+      <div class="spinner"></div>
+      Loading chart...
+    </div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <div id="sb-tabs">
+      <button class="sb-tab active" data-tab="signal">Signal</button>
+      <button class="sb-tab" data-tab="news">News</button>
+      <button class="sb-tab" data-tab="predict">Predict</button>
+      <button class="sb-tab" data-tab="trades">Trades</button>
+    </div>
+
+    <!-- SIGNAL PANEL -->
+    <div id="panel-signal" class="sb-panel active">
+      <div id="signal-list" style="flex:1;overflow-y:auto;padding:8px;"></div>
+    </div>
+
+    <!-- NEWS PANEL -->
+    <div id="panel-news" class="sb-panel">
+      <div id="news-list" style="flex:1;overflow-y:auto;padding:8px;"></div>
+    </div>
+
+    <!-- PREDICT PANEL -->
+    <div id="panel-predict" class="sb-panel">
+      <div id="predict-box" style="padding:10px;"></div>
+    </div>
+
+    <!-- TRADES PANEL -->
+    <div id="panel-trades" class="sb-panel">
+      <div id="trades-list" style="flex:1;overflow-y:auto;padding:8px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div id="modal-add-wl" class="modal" style="display:none;">
+  <div class="modal-content">
+    <span class="modal-close">&times;</span>
+    <h3>Add to Watchlist</h3>
+    <input type="text" id="modal-sym" placeholder="Symbol (e.g., AAPL)">
+    <input type="text" id="modal-name" placeholder="Name (optional)">
+    <div style="display:flex;gap:6px;margin-top:10px;">
+      <button id="modal-ok" style="flex:1;padding:6px;background:#2979ff;color:white;border:none;border-radius:3px;cursor:pointer;">Add</button>
+      <button id="modal-cancel" style="flex:1;padding:6px;background:#333;color:#fff;border:none;border-radius:3px;cursor:pointer;">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- SCRIPTS (Modular) -->
+<script src="js/constants.js"></script>
+<script src="js/ui-manager.js"></script>
+<script src="js/chart-manager.js"></script>
+<script src="js/data-manager.js"></script>
+<script src="js/websocket-manager.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>
