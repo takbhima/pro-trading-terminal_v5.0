@@ -3,7 +3,7 @@ Pro Trading Terminal v4.0 - FastAPI Backend
 Main entry point for the trading terminal application
 """
 
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -11,6 +11,7 @@ import os
 import json
 from datetime import datetime
 from pathlib import Path
+import asyncio
 
 # Import backend modules
 from backend.config.settings import Settings
@@ -36,7 +37,77 @@ app.add_middleware(
 )
 
 # ═══════════════════════════════════════════════════════════════════════════
-# API ENDPOINTS
+# WEBSOCKET CONNECTION MANAGER
+# ═══════════════════════════════════════════════════════════════════════════
+
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: list = []
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+        print(f"WebSocket connected. Total connections: {len(self.active_connections)}")
+
+    def disconnect(self, websocket: WebSocket):
+        if websocket in self.active_connections:
+            self.active_connections.remove(websocket)
+        print(f"WebSocket disconnected. Total connections: {len(self.active_connections)}")
+
+    async def broadcast(self, message: dict):
+        disconnected = []
+        for connection in self.active_connections:
+            try:
+                await connection.send_json(message)
+            except Exception as e:
+                print(f"Error sending message: {e}")
+                disconnected.append(connection)
+        
+        # Remove disconnected clients
+        for connection in disconnected:
+            if connection in self.active_connections:
+                self.active_connections.remove(connection)
+
+manager = ConnectionManager()
+
+# ═══════════════════════════════════════════════════════════════════════════
+# WEBSOCKET ENDPOINT
+# ═══════════════════════════════════════════════════════════════════════════
+
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    """WebSocket endpoint for real-time updates"""
+    await manager.connect(websocket)
+    try:
+        while True:
+            data = await websocket.receive_text()
+            message = json.loads(data)
+            
+            # Handle different message types
+            if message.get("type") == "subscribe":
+                symbol = message.get("symbol", "BTC-USD")
+                interval = message.get("interval", "5m")
+                
+                # Send status message
+                status_msg = {
+                    "type": "status",
+                    "open_markets": ["US", "Crypto"],
+                    "any_open": True
+                }
+                await websocket.send_json(status_msg)
+                
+            elif message.get("type") == "ping":
+                # Respond to ping
+                await websocket.send_json({"type": "pong"})
+                
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
+    except Exception as e:
+        print(f"WebSocket error: {e}")
+        manager.disconnect(websocket)
+
+# ═══════════════════════════════════════════════════════════════════════════
+# REST API ENDPOINTS
 # ═══════════════════════════════════════════════════════════════════════════
 
 @app.get("/api/test")
@@ -61,14 +132,18 @@ def get_status():
             "frontend": "ready",
             "btc_price": price,
             "timestamp": datetime.utcnow().isoformat(),
-            "data_source": "yfinance"
+            "data_source": "yfinance",
+            "open_markets": ["US", "Crypto"],
+            "any_open": True
         }
     except Exception as e:
         return {
             "status": "ok",
             "backend": "running",
             "error": str(e),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
+            "open_markets": [],
+            "any_open": False
         }
 
 @app.get("/api/strategies")
@@ -171,6 +246,7 @@ def get_chart_data(symbol: str = "BTC-USD", interval: str = "5m", strategy: str 
         }
         
     except Exception as e:
+        print(f"Error in get_chart_data: {e}")
         return {
             "error": str(e),
             "symbol": symbol,
@@ -265,6 +341,7 @@ if __name__ == "__main__":
 ║                                                                ║
 ║  🚀 Starting server...                                         ║
 ║  📍 API: http://localhost:8000                                 ║
+║  📍 WebSocket: ws://localhost:8000/ws                          ║
 ║  📊 Frontend: http://localhost:8001                            ║
 ║  📚 Documentation: http://localhost:8001                       ║
 ║                                                                ║
