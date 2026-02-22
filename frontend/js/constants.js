@@ -1,7 +1,7 @@
 /* frontend/js/constants.js - Global constants and configuration */
 
-const API_BASE = '';
-const WS_URL = `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}/ws`;
+const API_BASE = 'http://localhost:8000';
+const WS_URL = 'ws://localhost:8000/ws';
 
 const TIMEFRAMES = ['5m', '15m', '1h', '1d', '1wk'];
 const STRATEGIES = {};
